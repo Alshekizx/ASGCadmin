@@ -1,0 +1,10 @@
+{
+  "description": "Streamline content management for ASGC administrators with an intuitive dashboard for editing pages, managing events, publications, and user roles efficiently.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
