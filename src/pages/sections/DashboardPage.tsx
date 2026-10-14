@@ -39,9 +39,6 @@ export default function DashboardPage({ setSection }: Props) {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <p className="rounded-lg border-2 border-amber-300 bg-amber-100 px-6 py-6 text-center text-2xl font-extrabold leading-snug text-slate-950 md:text-4xl">
-        This is Just a prototype. website is under construction
-      </p>
       {/* Welcome banner */}
       <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #132040 60%, #1e3657 100%)' }}>
         <div className="px-8 py-6 relative">
