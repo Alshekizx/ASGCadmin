@@ -9,10 +9,19 @@
     <meta property="og:site_name" content="ASGC" />
     <meta name="twitter:title" content="ASGC" />
     <link rel="apple-touch-icon" href="/ASGC_colored_logo.png" />
+    <link rel="preload" as="image" href="/ASGC_White_Logo.png" />
+    <link rel="stylesheet" href="/asgc-loader.css" />
     <!-- figma:head-end -->
   </head>
   <body>
     <!-- figma:body-start -->
+    <div id="asgc-loader" class="asgc-loader" role="status" aria-live="polite" aria-label="Loading ASGC">
+      <div class="asgc-loader-content">
+        <div class="asgc-loader-emblem"><img class="asgc-loader-logo" src="/ASGC_White_Logo.png" alt="ASGC" /></div>
+        <p class="asgc-loader-label">Loading</p>
+      </div>
+    </div>
+    <noscript><style>#asgc-loader { display: none; }</style>JavaScript is required to use ASGC.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- figma:body-end -->

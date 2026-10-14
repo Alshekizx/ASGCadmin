@@ -1,0 +1,11 @@
+/* Shared by the document loader and React loading states. */
+.asgc-loader { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: #0d1e35; color: white; font-family: Inter, system-ui, sans-serif; transition: opacity 240ms ease, visibility 240ms ease; }
+.asgc-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.asgc-loader-content { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.asgc-loader-emblem { position: relative; width: 190px; height: 190px; display: grid; place-items: center; }
+.asgc-loader-emblem::before { content: ''; position: absolute; inset: 0; border: 2px solid rgba(201,168,76,.18); border-top-color: #dfc070; border-right-color: #c9a84c; border-radius: 50%; animation: asgc-spin 1.6s linear infinite; }
+.asgc-loader-logo { width: 138px; height: auto; object-fit: contain; animation: asgc-pulse 1.6s ease-in-out infinite; }
+.asgc-loader-label { margin: 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #dfc070; }
+@keyframes asgc-spin { to { transform: rotate(360deg); } }
+@keyframes asgc-pulse { 50% { opacity: .65; transform: scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .asgc-loader, .asgc-loader-logo, .asgc-loader-emblem::before { animation: none; transition: none; } }
