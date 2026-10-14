@@ -21,7 +21,7 @@ export default function LoadingIndicator({ navigationKey }: { navigationKey: str
     show();
     const ready = () => {
       clearTimeout(timer);
-      timer = setTimeout(hide, initial ? 700 : 300);
+      timer = setTimeout(hide, 2000);
     };
     if (initial && document.readyState !== 'complete') {
       window.addEventListener('load', ready, { once: true });
