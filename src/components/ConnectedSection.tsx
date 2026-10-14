@@ -170,12 +170,14 @@ export default function ConnectedSection({ section }: { section: string }) {
 
   useEffect(() => {
     let active = true
+    let revision = 0
     setEditing(null)
     setLoading(true)
     setError("")
     setNotice("")
     setSearch("")
     const refresh = async () => {
+      const current = ++revision
       const [content, incoming] = await Promise.all([
         client
           .from("asgc_content")
@@ -187,7 +189,7 @@ export default function ConnectedSection({ section }: { section: string }) {
           .select("*")
           .order("created_at", { ascending: false }),
       ])
-      if (!active) return
+      if (!active || current !== revision) return
       if (content.error || incoming.error)
         setError(errorMessage(content.error || incoming.error))
       else {
@@ -214,13 +216,21 @@ export default function ConnectedSection({ section }: { section: string }) {
           void refresh()
         },
       )
-      .subscribe()
+    void client.auth.getSession().then(async ({ data }) => {
+      if (!active || !data.session) return
+      await client.realtime.setAuth(data.session.access_token)
+      if (active) channel.subscribe()
+    }).catch(() => {
+      // Periodic refresh continues if the realtime connection is unavailable.
+    })
     const focus = () => {
       void refresh()
     }
     window.addEventListener("focus", focus)
+    const poll = window.setInterval(focus, 15000)
     return () => {
       active = false
+      clearInterval(poll)
       window.removeEventListener("focus", focus)
       void client.removeChannel(channel)
     }
