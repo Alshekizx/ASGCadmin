@@ -1,3 +1,7 @@
+Database setup was applied to project `szrrdgiivhfhvugemvfu` on 14 October 2026. The account `seyiduncan40@gmail.com` has been created and approved as an administrator. Do not rerun `setup.sql` against this project; its migration has already been applied.
+
+Live checks passed for administrator sign-in, published content access, blocked anonymous inbox reads, contact/partnership/newsletter submissions, administrator status updates, draft creation, and public draft exclusion. All temporary test records were removed. The database contains 25 seeded public content records, RLS on all three ASGC tables, the public asset bucket, and realtime publication for content and submissions.
+
 Both websites use project `szrrdgiivhfhvugemvfu`. The browser clients contain only its publishable key. A different project can be selected with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel, followed by a redeploy.
 
 Connected workflows:
