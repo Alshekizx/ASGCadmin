@@ -101,17 +101,20 @@ export default function WebsiteSettings() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="General Enquiries Email">
-              <Input type="email" defaultValue="info@asgc.org" />
+              <Input type="email" defaultValue="info@asgc.us.com" />
             </FormField>
             <FormField label="Media / Press Email">
-              <Input type="email" defaultValue="media@asgc.org" />
+              <Input type="email" defaultValue="info@asgc.us.com" />
             </FormField>
           </div>
+          <FormField label="CEO Email">
+            <Input type="email" defaultValue="ceo@asgc.us.com" />
+          </FormField>
           <FormField label="Partnerships Email">
-            <Input type="email" defaultValue="partnerships@asgc.org" />
+            <Input type="email" defaultValue="info@asgc.us.com" />
           </FormField>
           <FormField label="Contact Form Recipient" hint="Messages submitted through the website contact form are sent here">
-            <Input type="email" defaultValue="info@asgc.org" />
+            <Input type="email" defaultValue="info@asgc.us.com" />
           </FormField>
         </Card>
       )}

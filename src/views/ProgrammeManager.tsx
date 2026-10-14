@@ -130,7 +130,7 @@ export function ProgrammeEditor({ onNavigate }: { onNavigate: (v: AdminView) => 
             <Card>
               <div className="flex flex-col gap-4">
                 <Textarea label="Contact & Participation Details" value={contact} onChange={setContact} placeholder="How can interested parties get in touch or participate?" rows={5} />
-                <Input label="Contact Email" value="" onChange={() => {}} placeholder="programmes@asgc.org" type="email" />
+                <Input label="Contact Email" value="" onChange={() => {}} placeholder="info@asgc.us.com" type="email" />
               </div>
             </Card>
           )}

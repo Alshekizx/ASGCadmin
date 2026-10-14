@@ -309,7 +309,7 @@ export function WebsiteSettings() {
 
   const [orgName, setOrgName] = useState('Ahmed Sule Global Centre');
   const [tagline, setTagline] = useState('Empowering Africa\'s Economic Future');
-  const [email, setEmail] = useState('info@asgc.org');
+  const [email, setEmail] = useState('info@asgc.us.com');
   const [phone, setPhone] = useState('+234 9 000 1234');
   const [address, setAddress] = useState('Plot 123, Adetokunbo Ademola Crescent, Wuse II, Abuja, Nigeria');
   const [twitter, setTwitter] = useState('@ASGCofficial');
@@ -367,9 +367,10 @@ export function WebsiteSettings() {
             <div className="flex flex-col gap-4">
               <Input label="Organisation Name" value={orgName} onChange={setOrgName} required />
               <Input label="Primary Email Address" type="email" value={email} onChange={setEmail} />
+              <Input label="CEO Email" type="email" value="ceo@asgc.us.com" onChange={() => {}} />
               <Input label="Phone Number" value={phone} onChange={setPhone} />
               <Textarea label="Physical Address" value={address} onChange={setAddress} rows={3} />
-              <Input label="Contact Form Email (Recipient)" type="email" value="admin@asgc.org" onChange={() => {}} helper="Messages from the contact form will be sent to this address" />
+              <Input label="Contact Form Email (Recipient)" type="email" value="info@asgc.us.com" onChange={() => {}} helper="Messages from the contact form will be sent to this address" />
             </div>
           </Card>
         )}
