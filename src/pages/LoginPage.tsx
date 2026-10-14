@@ -177,20 +177,7 @@ export default function LoginPage({ page, setPage, onLogin }: Props) {
 }
 
 function ASGCLogo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #c9a84c, #dfc070)' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" fill="#0a1628" opacity="0.9"/>
-          <path d="M12 6l-5 3v6l5 3 5-3V9L12 6z" fill="#c9a84c"/>
-        </svg>
-      </div>
-      <div>
-        <div className="text-white font-bold text-sm tracking-wider">ASGC</div>
-        <div className="text-xs" style={{ color: 'rgba(201,168,76,0.8)' }}>Africa Strategic Growth Council</div>
-      </div>
-    </div>
-  );
+  return <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-28 h-auto object-contain" />;
 }
 
 function EyeIcon() {

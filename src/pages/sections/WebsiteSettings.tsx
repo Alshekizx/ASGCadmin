@@ -25,7 +25,7 @@ export default function WebsiteSettings() {
         <Card className="p-6 space-y-5">
           <p className="text-sm font-semibold pb-2 border-b" style={{ color: '#0a1628', borderColor: '#f0f2f5', fontFamily: 'var(--font-display)' }}>Organisation Information</p>
           <FormField label="Organisation Name" required>
-            <Input defaultValue="Africa Strategic Growth Council (ASGC)" />
+            <Input defaultValue="ASGC" />
           </FormField>
           <FormField label="Short Name / Acronym">
             <Input defaultValue="ASGC" />
@@ -51,9 +51,11 @@ export default function WebsiteSettings() {
             <p className="text-sm font-semibold pb-2 border-b" style={{ color: '#0a1628', borderColor: '#f0f2f5', fontFamily: 'var(--font-display)' }}>Logo & Brand Assets</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField label="Primary Logo (Light background)">
+                <div className="bg-white rounded-lg p-4 mb-3"><img src="/ASGC_colored_logo.png" alt="ASGC" className="h-24 w-auto object-contain mx-auto" /></div>
                 <UploadBox accept="image/png,image/svg+xml" hint="SVG or PNG · Transparent background" />
               </FormField>
               <FormField label="Primary Logo (Dark background)">
+                <div className="bg-[#0d1e35] rounded-lg p-4 mb-3"><img src="/ASGC_White_Logo.png" alt="ASGC" className="h-24 w-auto object-contain mx-auto" /></div>
                 <UploadBox accept="image/png,image/svg+xml" hint="White / light version of the logo" />
               </FormField>
             </div>
@@ -153,7 +155,7 @@ export default function WebsiteSettings() {
         <Card className="p-6 space-y-4">
           <p className="text-sm font-semibold pb-2 border-b" style={{ color: '#0a1628', borderColor: '#f0f2f5', fontFamily: 'var(--font-display)' }}>Default SEO Settings</p>
           <FormField label="Default SEO Title" hint="Used when a page doesn't have its own SEO title">
-            <Input defaultValue="Africa Strategic Growth Council (ASGC)" />
+            <Input defaultValue="ASGC" />
           </FormField>
           <FormField label="Title Separator" hint="Shown between page title and site name">
             <Input defaultValue=" | ASGC" />

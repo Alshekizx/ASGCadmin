@@ -32,9 +32,7 @@ export default function Sidebar({ view, onNavigate }: {
     <aside className="fixed top-0 left-0 h-full w-60 bg-[#0B1F3A] flex flex-col z-30 shadow-xl">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-        <div className="w-9 h-9 rounded-lg bg-[#C9A84C] flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm font-serif">A</span>
-        </div>
+        <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-10 h-10 object-contain flex-shrink-0" />
         <div>
           <p className="text-white font-bold text-sm leading-tight">ASGC</p>
           <p className="text-white/40 text-xs">Admin Portal</p>

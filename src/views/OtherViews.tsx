@@ -307,7 +307,7 @@ export function WebsiteSettings() {
   const [alert, setAlert] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const [orgName, setOrgName] = useState('African Sovereign Growth Capital');
+  const [orgName, setOrgName] = useState('Ahmed Sule Global Centre');
   const [tagline, setTagline] = useState('Empowering Africa\'s Economic Future');
   const [email, setEmail] = useState('info@asgc.org');
   const [phone, setPhone] = useState('+234 9 000 1234');
@@ -315,9 +315,9 @@ export function WebsiteSettings() {
   const [twitter, setTwitter] = useState('@ASGCofficial');
   const [linkedin, setLinkedin] = useState('asgc-org');
   const [facebook, setFacebook] = useState('ASGCofficial');
-  const [seoTitle, setSeoTitle] = useState('African Sovereign Growth Capital — ASGC');
-  const [seoDesc, setSeoDesc] = useState('African Sovereign Growth Capital (ASGC) is a leading institution championing responsible investment and economic development across Africa.');
-  const [footerText, setFooterText] = useState('© 2025 African Sovereign Growth Capital. All rights reserved.');
+  const [seoTitle, setSeoTitle] = useState('ASGC');
+  const [seoDesc, setSeoDesc] = useState('Ahmed Sule Global Centre (ASGC) is a leading institution championing responsible investment and economic development across Africa.');
+  const [footerText, setFooterText] = useState('© 2025 Ahmed Sule Global Centre. All rights reserved.');
 
   function handleSave() {
     setSaving(true);
@@ -340,10 +340,8 @@ export function WebsiteSettings() {
               <div>
                 <p className="text-sm font-medium text-[#0B1F3A] mb-2">Organisation Logo</p>
                 <div className="flex items-center gap-4 p-4 bg-[#0B1F3A] rounded-lg mb-3">
-                  <div className="w-10 h-10 bg-[#C9A84C] rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold font-serif">A</span>
-                  </div>
-                  <p className="text-white font-bold">African Sovereign Growth Capital</p>
+                  <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-10 h-10 object-contain flex-shrink-0" />
+                  <p className="text-white font-bold">Ahmed Sule Global Centre</p>
                 </div>
                 <UploadArea label="Upload New Logo" accept="PNG, SVG" helper="White/transparent version for dark backgrounds — 200 × 60px minimum" />
               </div>
@@ -400,7 +398,7 @@ export function WebsiteSettings() {
           <Card>
             <div className="flex flex-col gap-4">
               <Textarea label="Footer Text" value={footerText} onChange={setFooterText} rows={2} />
-              <Textarea label="Footer About Text" value="African Sovereign Growth Capital (ASGC) is dedicated to facilitating responsible investment and sustainable economic development across Africa." onChange={() => {}} rows={3} />
+              <Textarea label="Footer About Text" value="Ahmed Sule Global Centre (ASGC) is dedicated to facilitating responsible investment and sustainable economic development across Africa." onChange={() => {}} rows={3} />
               <Input label="Footer Contact Email" type="email" value={email} onChange={setEmail} />
             </div>
           </Card>

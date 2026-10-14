@@ -69,12 +69,7 @@ export default function AdminShell({ currentSection, setCurrentSection, onLogout
       <aside className="flex flex-col h-full flex-shrink-0 transition-all duration-200" style={{ width: sidebarOpen ? 240 : 64, background: '#0d1e35', borderRight: '1px solid rgba(201,168,76,0.12)' }}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-4 border-b flex-shrink-0" style={{ borderColor: 'rgba(201,168,76,0.15)', minHeight: 64 }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #c9a84c, #dfc070)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" fill="#0a1628" opacity="0.9"/>
-              <path d="M12 6l-5 3v6l5 3 5-3V9L12 6z" fill="#c9a84c"/>
-            </svg>
-          </div>
+          <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-8 h-8 object-contain flex-shrink-0" />
           {sidebarOpen && (
             <div className="overflow-hidden">
               <div className="text-white font-bold text-sm tracking-wider whitespace-nowrap">ASGC</div>

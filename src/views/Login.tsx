@@ -124,11 +124,9 @@ function LoginShell({ children }: { children: React.ReactNode }) {
         />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 bg-[#C9A84C] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold font-serif">A</span>
-            </div>
+            <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-10 h-10 object-contain flex-shrink-0" />
             <div>
-              <p className="text-white font-bold">African Sovereign Growth Capital</p>
+              <p className="text-white font-bold">Ahmed Sule Global Centre</p>
               <p className="text-white/40 text-xs">Administration Portal</p>
             </div>
           </div>
@@ -143,7 +141,7 @@ function LoginShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <p className="relative z-10 text-white/30 text-xs">
-          &copy; {new Date().getFullYear()} African Sovereign Growth Capital. All rights reserved.
+          &copy; {new Date().getFullYear()} Ahmed Sule Global Centre. All rights reserved.
         </p>
       </div>
 
@@ -151,9 +149,7 @@ function LoginShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex items-center justify-center bg-[#F4F5F7] p-6">
         <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md">
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-9 h-9 bg-[#0B1F3A] rounded-lg flex items-center justify-center">
-              <span className="text-[#C9A84C] font-bold font-serif text-sm">A</span>
-            </div>
+            <img src="/ASGC_colored_logo.png" alt="ASGC" className="w-10 h-10 object-contain flex-shrink-0" />
             <div>
               <p className="font-bold text-[#0B1F3A] text-sm">ASGC</p>
               <p className="text-gray-400 text-xs">Admin Portal</p>
