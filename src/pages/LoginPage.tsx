@@ -177,7 +177,7 @@ export default function LoginPage({ page, setPage, onLogin }: Props) {
 }
 
 function ASGCLogo() {
-  return <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-28 h-auto object-contain" />;
+  return <img src="/ASGC_colored_logo.png" alt="ASGC" className="w-32 h-auto object-contain bg-white rounded-lg p-3" />;
 }
 
 function EyeIcon() {

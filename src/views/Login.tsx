@@ -124,7 +124,7 @@ function LoginShell({ children }: { children: React.ReactNode }) {
         />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <img src="/ASGC_White_Logo.png" alt="ASGC" className="w-10 h-10 object-contain flex-shrink-0" />
+            <img src="/ASGC_colored_logo.png" alt="ASGC" className="w-12 h-12 object-contain flex-shrink-0 bg-white rounded-md p-1" />
             <div>
               <p className="text-white font-bold">Ahmed Sule Global Centre</p>
               <p className="text-white/40 text-xs">Administration Portal</p>
