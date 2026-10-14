@@ -93,10 +93,10 @@ export default function WebsiteSettings() {
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Main Phone Number">
-              <Input defaultValue="+44 20 7123 4567" />
+              <Input defaultValue="+234 805 757 6575" />
             </FormField>
             <FormField label="Secondary Phone Number">
-              <Input defaultValue="+234 1 234 5678" />
+              <Input defaultValue="" />
             </FormField>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

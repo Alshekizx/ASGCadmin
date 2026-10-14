@@ -310,7 +310,7 @@ export function WebsiteSettings() {
   const [orgName, setOrgName] = useState('Ahmed Sule Global Centre');
   const [tagline, setTagline] = useState('Empowering Africa\'s Economic Future');
   const [email, setEmail] = useState('info@asgc.us.com');
-  const [phone, setPhone] = useState('+234 9 000 1234');
+  const [phone, setPhone] = useState('+234 805 757 6575');
   const [address, setAddress] = useState('Plot 123, Adetokunbo Ademola Crescent, Wuse II, Abuja, Nigeria');
   const [twitter, setTwitter] = useState('@ASGCofficial');
   const [linkedin, setLinkedin] = useState('asgc-org');
