@@ -1,27 +1,28 @@
-Database setup was applied to project `szrrdgiivhfhvugemvfu` on 14 October 2026. The account `seyiduncan40@gmail.com` has been created and approved as an administrator. Do not rerun `setup.sql` against this project; its migration has already been applied.
+Both websites use Supabase project `szrrdgiivhfhvugemvfu`. All live sections use the database; no client-side sample collections or prototype success actions remain.
 
-Live checks passed for administrator sign-in, published content access, blocked anonymous inbox reads, contact/partnership/newsletter submissions, administrator status updates, draft creation, and public draft exclusion. Media upload and public asset delivery also passed. Realtime inbox delivery was verified using an explicitly authenticated subscription; the admin client now sets the session token before subscribing and refreshes every 15 seconds as a fallback. All temporary test records and assets were removed. The database contains 25 seeded public content records, RLS on all three ASGC tables, the public asset bucket, and realtime publication for content and submissions.
+| Admin section | Stored data | Public consumer |
+| --- | --- | --- |
+| Events | `asgc_content`, kind `event` | Events page and home event list |
+| Website Pages | kind `page` | Home, About, Our Work, Founder, Programmes, Events, News, Publications, Media, Partnerships, Contact; additional pages use their published URL name |
+| Programmes | kind `programme` | Programmes page and actual programme statistic |
+| Publications | kind `publication`, files in Storage | Publication cards and download links |
+| Leadership | kind `leadership` | About directory, founder name/photo/biography on home and founder pages |
+| Partners | kind `partner` | Partnerships directory and partner statistic |
+| Media | kinds `photo`, `video`, `press`, `speech`, `coverage` | Every media tab |
+| Messages | `asgc_submissions`, contact and partnership kinds | Public forms write; only active admins read |
+| Registrations | submission kind `registration` | Event form writes through validated registration RPC |
+| Newsletter | submission kind `newsletter` | Footer subscription form |
+| Users | Supabase Authentication and `asgc_admins` | Protected account operations and access management |
+| Website Settings | kind `settings` | Organisation names, contact details, logos, social URLs, map location and runtime site metadata |
 
-Both websites use project `szrrdgiivhfhvugemvfu`. The browser clients contain only its publishable key. A different project can be selected with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel, followed by a redeploy.
+The public client caches actual database responses, shares requests between components, and refreshes on realtime notifications, focus and 30-second polling. Admin lists refresh on realtime notifications, focus and 15-second polling. Errors and empty states do not substitute local sample data. Homepage statistics are database aggregates; the old illustrative counts are removed.
 
-Connected workflows:
+Public content requires `published` status. Submissions and user information remain private. Registrations validate the published event, open/past flags, duplicate registrations and capacity while holding an event-row lock. A single published founder and settings record prevents conflicting sources. Suspended administrator accounts lose database permissions; the admin sign-in gate also rechecks access periodically.
 
-- Contact and partnership forms save private submissions; approved admins can read, update status, and delete them in Messages.
-- Newsletter subscriptions save to the admin Newsletter list.
-- Admins create, edit, publish, archive, and delete News & Insights, Publications & Research, and Media & Gallery items. Public pages read only published items.
-- News includes article bodies; publications and speeches support PDF uploads; the gallery supports photos, video links, press releases, and media coverage links.
-- Updates refresh through Supabase Realtime, on window focus, and periodic public refreshes. The seed preserves the current public content.
+The `asgc-admin-users` Edge Function validates the caller's session with Supabase Auth and requires active ASGC admin membership before using privileged APIs. It creates accounts without sending email, changes passwords, and deletes accounts. Self-deletion is prevented. Browser code contains only the publishable key. Server keys are supplied by Supabase's function environment.
 
-To activate:
+Database changes and the account function are already deployed to the current project. Do not rerun table-creation scripts on this project. For a fresh project, run `setup.sql`, create the initial administrator account in Supabase Authentication and run `approve-admin.sql`. Deploy the Edge Function from this repository with `supabase functions deploy asgc-admin-users --project-ref YOUR_PROJECT_REF`; its config uses handler-side session verification. Vercel deploys the two frontend repositories.
 
-1. Connect the Supabase plugin so the setup can be applied directly, or open the project's SQL Editor and run `setup.sql` once. It creates new ASGC tables, policies, asset storage, and loads the existing site content. Do not rerun the table migration after a successful setup; the seed itself is safe to rerun.
-2. In Supabase Authentication, create a password-based user for `seyiduncan40@gmail.com` if it does not already exist. Choose the password in Supabase; no password or secret key belongs in source control.
-3. Run `approve-admin.sql` after that account exists. Sign in to the admin website with that account. Other authenticated users are not granted administrator permissions.
-4. Deploy both repositories to Vercel after the database setup is complete. Set `VITE_ADMIN_URL` on the public website if the `/admin` page should link to the separately hosted admin portal.
-5. Verify a contact enquiry, partnership enquiry, and newsletter subscription appear in the admin portal. Publish a draft article and reload the public News page; confirm unpublishing removes it. Upload a publication PDF and gallery image and check the public links.
+Temporary content and inbox fixtures are flagged `test_data` and use `[Test]` labels or reserved `example.invalid` addresses. One separate temporary publication includes a valid PDF in Storage for download testing. `remove-test-data.sql` removes tagged content/submissions and reserved temporary authentication accounts. The public asset bucket serves website files; delete test PDFs from the Storage `testing/` folder when those test records are removed.
 
-The browser publishable key cannot create SQL tables. A database-management connection or SQL Editor access is required for the migration. No secret key has been stored in either repository.
-
-`npm test` runs the migration and seed against local PostgreSQL using PGlite, verifying public writes, private submissions, draft visibility, rejected non-admin writes, and approved administrator access. Storage HTTP delivery and realtime connections require live-project verification.
-
-These changes cover the requested workflows. Events, programme editing, website settings, and user management are outside this integration's scope. Supabase stores enquiries and subscriptions; it does not automatically send email replies or newsletter campaigns.
+Validation is recorded in `AUDIT.md`. `npm test` verifies database policies, every collection, capacity rules, actual Auth column types, access management and privileged account-handler guards. Both apps also pass TypeScript checks and production builds.

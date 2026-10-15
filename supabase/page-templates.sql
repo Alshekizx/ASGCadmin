@@ -1,0 +1,11 @@
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"items_2": [{"to": "", "img": "", "desc": "", "title": ""}], "mandateItems": [{"desc": "", "icon": "", "title": ""}]}'::jsonb) where kind='page' and slug='home' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"mandateAreas": [{"img": "", "num": "", "desc": "", "icon": "", "title": "", "activities": [""]}]}'::jsonb) where kind='page' and slug='our-work' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"timelineItems": [{"items": [""], "title": "", "period": ""}], "achievementCards": [{"sub": "", "desc": "", "title": ""}]}'::jsonb) where kind='page' and slug='founder' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{}'::jsonb) where kind='page' and slug='programmes' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{}'::jsonb) where kind='page' and slug='events' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{}'::jsonb) where kind='page' and slug='news' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{}'::jsonb) where kind='page' and slug='publications' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{}'::jsonb) where kind='page' and slug='media' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"departments": [""]}'::jsonb) where kind='page' and slug='contact' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"items_1": [""], "partnerTypes": [{"desc": "", "icon": "", "title": ""}], "opportunities": [""]}'::jsonb) where kind='page' and slug='partnerships' and not data ? 'arrayTemplates';
+update public.asgc_content set data=jsonb_set(data,'{arrayTemplates}','{"items_1": [{"val": "", "label": ""}], "coreValues": [{"desc": "", "icon": "", "title": ""}]}'::jsonb) where kind='page' and slug='about' and not data ? 'arrayTemplates';

@@ -1,84 +1,91 @@
-import { useEffect, useState, type ReactNode } from "react"
-import { supabase } from "../lib/supabase"
+import { useEffect, useState, type ReactNode } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function SupabaseAuth({ children }: { children: ReactNode }) {
-  const [authorized, setAuthorized] = useState(false)
-  const [checking, setChecking] = useState(true)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState("")
+  const [authorized, setAuthorized] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const client = supabase
+    const client = supabase;
     if (!client) {
-      setChecking(false)
-      return
+      setChecking(false);
+      return;
     }
-    let active = true
-    let revision = 0
+    let active = true;
+    let revision = 0;
     const check = async (hasSession: boolean) => {
-      const current = ++revision
+      const current = ++revision;
       if (!hasSession) {
         if (active) {
-          setAuthorized(false)
-          setChecking(false)
+          setAuthorized(false);
+          setChecking(false);
         }
-        return
+        return;
       }
-      const { data, error } = await client.rpc("asgc_is_admin")
-      if (!active || revision !== current) return
-      setAuthorized(!error && data === true)
+      const { data, error } = await client.rpc("asgc_is_admin");
+      if (!active || revision !== current) return;
+      setAuthorized(!error && data === true);
       if (error)
         setMessage(
           "Unable to verify admin access. Please try signing in again.",
-        )
+        );
       else if (!data)
-        setMessage("This account does not have ASGC administrator access.")
-      else setMessage("")
-      setChecking(false)
-    }
+        setMessage("This account does not have ASGC administrator access.");
+      else setMessage("");
+      setChecking(false);
+    };
     // Run database requests outside the Auth callback to avoid auth-lock contention.
     const { data: listener } = client.auth.onAuthStateChange(
       (_event, session) => {
         setTimeout(() => {
-          if (active) void check(Boolean(session))
-        }, 0)
+          if (active) void check(Boolean(session));
+        }, 0);
       },
-    )
+    );
     void client.auth.getSession().then(({ data, error }) => {
-      if (!active) return
+      if (!active) return;
       if (error) {
-        setMessage("Unable to restore your session. Please sign in again.")
-        setChecking(false)
-      } else void check(Boolean(data.session))
-    })
+        setMessage("Unable to restore your session. Please sign in again.");
+        setChecking(false);
+      } else void check(Boolean(data.session));
+    });
+    const roleCheck = setInterval(() => {
+      void client.auth.getSession().then(({ data }) => {
+        if (active) void check(Boolean(data.session));
+      });
+    }, 30000);
     return () => {
-      active = false
-      revision++
-      listener.subscription.unsubscribe()
-    }
-  }, [])
+      clearInterval(roleCheck);
+      active = false;
+      revision++;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!supabase || busy) return
-    setBusy(true)
-    setMessage("")
+    event.preventDefault();
+    if (!supabase || busy) return;
+    setBusy(true);
+    setMessage("");
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
-      if (error) setMessage(error.message)
+      });
+      if (error) setMessage(error.message);
+      else setPassword("");
     } catch {
-      setMessage("Sign-in failed. Please try again.")
+      setMessage("Sign-in failed. Please try again.");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
-  if (authorized) return children
+  if (authorized) return children;
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0d1e35] p-6">
       <div className="w-full max-w-md bg-white rounded-xl p-8 shadow-xl">
@@ -136,5 +143,5 @@ export default function SupabaseAuth({ children }: { children: ReactNode }) {
         )}
       </div>
     </div>
-  )
+  );
 }

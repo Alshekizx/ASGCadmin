@@ -1,0 +1,4 @@
+# The handler validates the user's JWT with Supabase Auth and checks active admin membership.
+# Gateway verification is disabled to support the project's asymmetric signing keys.
+[functions.asgc-admin-users]
+verify_jwt = false
