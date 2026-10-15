@@ -41,7 +41,9 @@ export default function AdminShell({
   setCurrentSection,
   onLogout,
 }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.innerWidth >= 1024,
+  );
   const [accountEmail, setAccountEmail] = useState("");
   useEffect(() => {
     void supabase?.auth
@@ -52,7 +54,11 @@ export default function AdminShell({
   const activeSec = currentSection;
 
   const renderSection = () => (
-    <ConnectedSection key={currentSection} section={currentSection} />
+    <ConnectedSection
+      key={currentSection}
+      section={currentSection}
+      onNavigate={setCurrentSection}
+    />
   );
 
   return (
@@ -97,10 +103,7 @@ export default function AdminShell({
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.id === activeSec ||
-              (item.id === "events" &&
-                currentSection === ("registrations" as AdminPage));
+            const isActive = item.id === activeSec;
             return (
               <button
                 key={item.id}
@@ -167,6 +170,7 @@ export default function AdminShell({
           style={{ borderColor: "rgba(201,168,76,0.12)" }}
         >
           <button
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
             style={{ color: "rgba(255,255,255,0.4)" }}
@@ -189,6 +193,7 @@ export default function AdminShell({
           </button>
           {onLogout && (
             <button
+              aria-label="Logout"
               onClick={onLogout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
               style={{ color: "rgba(255,255,255,0.4)" }}
@@ -214,7 +219,7 @@ export default function AdminShell({
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Top header */}
         <header
           className="flex items-center gap-4 px-6 border-b flex-shrink-0"

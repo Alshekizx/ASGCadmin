@@ -1,3 +1,5 @@
+import Dashboard from "./Dashboard";
+import type { AdminPage } from "../types/admin";
 import ContentFields from "./ContentFields";
 import Users from "./Users";
 import { useEffect, useState } from "react";
@@ -11,6 +13,7 @@ interface ContentRow {
   status: string;
   data: Record<string, unknown>;
   sort_order: number;
+  updated_at?: string;
 }
 interface Submission {
   id: string;
@@ -278,7 +281,13 @@ const errorMessage = (error: unknown) =>
         : "The request failed. Please try again.";
 const safeLink = (value: string) => /^(https?:\/\/|\/[^/])/.test(value);
 
-export default function ConnectedSection({ section }: { section: string }) {
+export default function ConnectedSection({
+  section,
+  onNavigate,
+}: {
+  section: string;
+  onNavigate: (section: AdminPage) => void;
+}) {
   const [mediaKind, setMediaKind] = useState("media");
   const key = section === "media" ? mediaKind : section.replace(/-editor$/, "");
   const definition = definitions[key];
@@ -398,13 +407,30 @@ export default function ConnectedSection({ section }: { section: string }) {
     event.preventDefault();
     if (!editing || !definition) return;
     const data = { ...editing.data };
-    if(definition.kind==='event') {
-      const capacity=Number(data.capacity||0);
-      if(!Number.isSafeInteger(capacity)||capacity<0){setError('Capacity must be a whole number of zero or more.');return;}
-      data.capacity=capacity;
+    if (definition.kind === "event") {
+      const capacity = Number(data.capacity || 0);
+      if (!Number.isSafeInteger(capacity) || capacity < 0) {
+        setError("Capacity must be a whole number of zero or more.");
+        return;
+      }
+      data.capacity = capacity;
     }
-    if(definition.kind==='photo'&&editing.status==='published'&&!String(data.img??'').trim()) {setError('Upload a photo or provide its image URL before publishing.');return;}
-    if(definition.kind==='settings'&&data.adminUrl&&!/^https:\/\//.test(String(data.adminUrl))) {setError('Use an https:// address for the administrator website.');return;}
+    if (
+      definition.kind === "photo" &&
+      editing.status === "published" &&
+      !String(data.img ?? "").trim()
+    ) {
+      setError("Upload a photo or provide its image URL before publishing.");
+      return;
+    }
+    if (
+      definition.kind === "settings" &&
+      data.adminUrl &&
+      !/^https:\/\//.test(String(data.adminUrl))
+    ) {
+      setError("Use an https:// address for the administrator website.");
+      return;
+    }
 
     if (definition.kind === "news") {
       const sections: { id: string; heading: string; paragraphs: string[] }[] =
@@ -583,51 +609,11 @@ export default function ConnectedSection({ section }: { section: string }) {
       {loading ? (
         <p role="status">Loading…</p>
       ) : section === "dashboard" ? (
-        <>
-          <h1 className="text-2xl font-bold mb-6">ASGC Dashboard</h1>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              [
-                "Published Content",
-                rows.filter((row) => row.status === "published").length,
-              ],
-              [
-                "Unread Enquiries",
-                submissions.filter(
-                  (row) =>
-                    ["contact", "partnership"].includes(row.kind) &&
-                    row.status === "unread",
-                ).length,
-              ],
-              ["Events", rows.filter((row) => row.kind === "event").length],
-              [
-                "Programmes",
-                rows.filter((row) => row.kind === "programme").length,
-              ],
-              ["Partners", rows.filter((row) => row.kind === "partner").length],
-              [
-                "Registrations",
-                submissions.filter((row) => row.kind === "registration").length,
-              ],
-              [
-                "Publications",
-                rows.filter((row) => row.kind === "publication").length,
-              ],
-              [
-                "Subscribers",
-                submissions.filter(
-                  (row) =>
-                    row.kind === "newsletter" && row.status !== "unsubscribed",
-                ).length,
-              ],
-            ].map(([label, count]) => (
-              <div key={label} className="bg-white rounded-xl p-6 border">
-                <p className="text-3xl font-bold text-[#96790f]">{count}</p>
-                <p className="text-sm mt-2">{label}</p>
-              </div>
-            ))}
-          </div>
-        </>
+        <Dashboard
+          rows={rows}
+          submissions={submissions}
+          onNavigate={onNavigate}
+        />
       ) : section === "users" ? (
         <Users />
       ) : definition ? (
@@ -751,7 +737,13 @@ export default function ConnectedSection({ section }: { section: string }) {
                     aria-label={field.label}
                     className={inputClass}
                     required={field.required}
-                    type={field.type === "number" ? "number" : ["email","ceoEmail"].includes(field.key) ? "email" : "text"}
+                    type={
+                      field.type === "number"
+                        ? "number"
+                        : ["email", "ceoEmail"].includes(field.key)
+                          ? "email"
+                          : "text"
+                    }
                     value={String(editing.data[field.key] ?? "")}
                     onChange={(event) =>
                       setEditing({
