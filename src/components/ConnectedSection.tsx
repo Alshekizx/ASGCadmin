@@ -297,6 +297,7 @@ export default function ConnectedSection({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [editing, setEditing] = useState<ContentRow | null>(null);
   const [search, setSearch] = useState("");
   const client = requireSupabase();
@@ -531,6 +532,110 @@ export default function ConnectedSection({
       setError(errorMessage(error));
     } finally {
       setBusy(false);
+    }
+  };
+  const uploadPhotos = async (fileList: FileList | null) => {
+    const selected = Array.from(fileList ?? []);
+    if (!selected.length || busy) return;
+
+    const validFiles = selected.filter(
+      (file) =>
+        ["image/jpeg", "image/png", "image/webp"].includes(file.type) &&
+        file.size <= 10 * 1024 * 1024,
+    );
+    const skippedCount = selected.length - validFiles.length;
+    if (!validFiles.length) {
+      setError("Choose JPEG, PNG or WebP images under 10 MB each.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setNotice("");
+    setUploadProgress(`Uploading 0 of ${validFiles.length} photos…`);
+    let finished = 0;
+    let nextIndex = 0;
+    const firstSortOrder =
+      Math.max(
+        -1,
+        ...rows
+          .filter((row) => row.kind === "photo")
+          .map((row) => row.sort_order),
+      ) + 1;
+    const addedRows: ContentRow[] = [];
+    const failures: string[] = [];
+    const uploadOne = async () => {
+      while (nextIndex < validFiles.length) {
+        const fileIndex = nextIndex++;
+        const file = validFiles[fileIndex];
+        let storagePath: string | undefined;
+        try {
+          const id = crypto.randomUUID();
+          storagePath = `${id}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+          const { error: uploadError } = await client.storage
+            .from("asgc-assets")
+            .upload(storagePath, file, { upsert: false });
+          if (uploadError) throw uploadError;
+
+          const { data } = client.storage
+            .from("asgc-assets")
+            .getPublicUrl(storagePath);
+          const title = file.name
+            .replace(/\.[^.]+$/, "")
+            .replace(/[_-]+/g, " ")
+            .trim();
+          const row: ContentRow = {
+            id,
+            kind: "photo",
+            slug: `photo-${id}`,
+            title: title || "ASGC Photo",
+            status: "published",
+            data: {
+              img: data.publicUrl,
+              caption: title || "ASGC Photo",
+              album: "ASGC Gallery",
+            },
+            sort_order: firstSortOrder + fileIndex,
+            updated_at: new Date().toISOString(),
+          };
+          const { error: insertError } = await client
+            .from("asgc_content")
+            .insert(row);
+          if (insertError) throw insertError;
+          addedRows.push(row);
+        } catch (uploadError) {
+          if (storagePath) {
+            await client.storage.from("asgc-assets").remove([storagePath]);
+          }
+          failures.push(`${file.name}: ${errorMessage(uploadError)}`);
+        } finally {
+          finished++;
+          setUploadProgress(`Uploading ${finished} of ${validFiles.length} photos…`);
+        }
+      }
+    };
+
+    try {
+      await Promise.all(
+        Array.from(
+          { length: Math.min(4, validFiles.length) },
+          () => uploadOne(),
+        ),
+      );
+      if (addedRows.length) {
+        setRows((previous) => [...addedRows, ...previous]);
+        setNotice(`Added ${addedRows.length} photo(s) to the Media gallery.`);
+      }
+      if (failures.length || skippedCount) {
+        const details = failures.slice(0, 3).join("; ");
+        setError(
+          `${failures.length} upload(s) failed and ${skippedCount} file(s) were skipped.` +
+            (details ? ` ${details}` : " Choose JPEG, PNG or WebP images under 10 MB each."),
+        );
+      }
+    } finally {
+      setBusy(false);
+      setUploadProgress("");
     }
   };
   const edit = (row: ContentRow) => {
@@ -825,8 +930,25 @@ export default function ConnectedSection({
           <>
             <div className="flex justify-between mb-6">
               <h1 className="text-2xl font-bold">{definition.label}</h1>
-              {(definition.kind !== "settings" ||
-                !rows.some((row) => row.kind === "settings")) && (
+              <div className="flex flex-wrap gap-2">
+                {section === "media" && definition.kind === "photo" && (
+                  <label className={`${buttonClass} cursor-pointer`}>
+                    {busy ? "Uploading photos…" : "Upload photos"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      disabled={busy}
+                      className="sr-only"
+                      onChange={(event) => {
+                        void uploadPhotos(event.target.files);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+                {(definition.kind !== "settings" ||
+                  !rows.some((row) => row.kind === "settings")) && (
                 <button
                   className={buttonClass}
                   onClick={() =>
@@ -843,8 +965,14 @@ export default function ConnectedSection({
                 >
                   Add New
                 </button>
-              )}
+                )}
+              </div>
             </div>
+            {uploadProgress && (
+              <p role="status" className="mb-4 text-sm text-gray-600">
+                {uploadProgress}
+              </p>
+            )}
             <input
               aria-label="Search content"
               className={`${inputClass} mb-4`}
