@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import ImageUploadField from "./ImageUploadField";
 function label(key: string) {
   const names: Record<string, string> = {
     blocks: "Headings and text",
@@ -25,12 +26,18 @@ export default function ContentFields({
   value,
   onChange,
   path = "Content",
+  fieldKey = "",
   template,
+  disabled = false,
+  onUploadImage,
 }: {
   value: unknown;
   onChange: (value: unknown) => void;
   path?: string;
+  fieldKey?: string;
   template?: unknown;
+  disabled?: boolean;
+  onUploadImage: (file: File) => Promise<string | null>;
 }) {
   const itemTemplate = useRef(
     Array.isArray(value)
@@ -46,6 +53,9 @@ export default function ContentFields({
             <ContentFields
               value={item}
               template={Array.isArray(template) ? template[0] : undefined}
+              fieldKey={fieldKey}
+              disabled={disabled}
+              onUploadImage={onUploadImage}
               onChange={(updated) =>
                 onChange(
                   value.map((original, i) =>
@@ -89,10 +99,29 @@ export default function ContentFields({
                 : undefined
             }
             path={label(key)}
+            fieldKey={key}
             onChange={(updated) => onChange({ ...value, [key]: updated })}
+            disabled={disabled}
+            onUploadImage={onUploadImage}
           />
         ))}
       </fieldset>
+    );
+  if (
+    typeof value === "string" &&
+    /^(img|.*(?:image|logo|photo|thumbnail|cover).*)$/i.test(fieldKey)
+  )
+    return (
+      <label className="block text-sm">
+        {path}
+        <ImageUploadField
+          label={path}
+          value={value}
+          disabled={disabled}
+          onChange={onChange}
+          onUpload={onUploadImage}
+        />
+      </label>
     );
   return (
     <label className="block text-sm">

@@ -1,6 +1,7 @@
 import Dashboard from "./Dashboard";
 import type { AdminPage } from "../types/admin";
 import ContentFields from "./ContentFields";
+import ImageUploadField from "./ImageUploadField";
 import Users from "./Users";
 import { useEffect, useState } from "react";
 import { requireSupabase } from "../lib/supabase";
@@ -421,7 +422,7 @@ export default function ConnectedSection({
       editing.status === "published" &&
       !String(data.img ?? "").trim()
     ) {
-      setError("Upload a photo or provide its image URL before publishing.");
+      setError("Upload a photo before publishing.");
       return;
     }
     if (
@@ -508,11 +509,26 @@ export default function ConnectedSection({
       },
     );
   };
-  const upload = async (file: File, field: string) => {
-    if (busy) return;
+  const upload = async (
+    file: File,
+    type: "image" | "file" = "image",
+  ): Promise<string | null> => {
+    if (busy) return null;
+    const supportedTypes =
+      type === "image"
+        ? ["image/jpeg", "image/png", "image/webp"]
+        : ["application/pdf"];
+    if (!supportedTypes.includes(file.type)) {
+      setError(
+        type === "image"
+          ? "Choose a JPEG, PNG or WebP image."
+          : "Choose a PDF file.",
+      );
+      return null;
+    }
     if (file.size > 10 * 1024 * 1024) {
       setError("Please choose a file smaller than 10 MB.");
-      return;
+      return null;
     }
     setBusy(true);
     setError("");
@@ -523,13 +539,10 @@ export default function ConnectedSection({
         .upload(path, file, { upsert: false });
       if (error) throw error;
       const { data } = client.storage.from("asgc-assets").getPublicUrl(path);
-      setEditing((previous) =>
-        previous
-          ? { ...previous, data: { ...previous.data, [field]: data.publicUrl } }
-          : previous,
-      );
+      return data.publicUrl;
     } catch (error) {
       setError(errorMessage(error));
+      return null;
     } finally {
       setBusy(false);
     }
@@ -769,14 +782,20 @@ export default function ConnectedSection({
                 }}
                 path="Page content"
                 template={{ arrays: editing.data.arrayTemplates ?? {} }}
+                disabled={busy}
+                onUploadImage={upload}
                 onChange={(value) =>
-                  setEditing({
-                    ...editing,
-                    data: {
-                      ...editing.data,
-                      ...(value as Record<string, unknown>),
-                    },
-                  })
+                  setEditing((previous) =>
+                    previous
+                      ? {
+                          ...previous,
+                          data: {
+                            ...previous.data,
+                            ...(value as Record<string, unknown>),
+                          },
+                        }
+                      : previous,
+                  )
                 }
               />
             )}
@@ -796,7 +815,24 @@ export default function ConnectedSection({
             {definition.fields.map((field) => (
               <label key={field.key} className="block text-sm">
                 {field.label}
-                {field.type === "checkbox" ? (
+                {field.type === "image" ? (
+                  <ImageUploadField
+                    label={field.label}
+                    value={String(editing.data[field.key] ?? "")}
+                    disabled={busy}
+                    onUpload={upload}
+                    onChange={(value) =>
+                      setEditing((previous) =>
+                        previous
+                          ? {
+                              ...previous,
+                              data: { ...previous.data, [field.key]: value },
+                            }
+                          : previous,
+                      )
+                    }
+                  />
+                ) : field.type === "checkbox" ? (
                   <input
                     type="checkbox"
                     className="ml-3"
@@ -861,20 +897,30 @@ export default function ConnectedSection({
                     }
                   />
                 )}
-                {(field.type === "image" || field.type === "file") && (
+                {field.type === "file" && (
                   <input
                     aria-label={`Upload ${field.label}`}
                     disabled={busy}
                     type="file"
-                    accept={
-                      field.type === "image"
-                        ? "image/png,image/jpeg,image/webp"
-                        : "application/pdf"
-                    }
+                    accept="application/pdf"
                     className="mt-2 block text-sm"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) void upload(file, field.key);
+                      if (file)
+                        void upload(file, "file").then((url) => {
+                          if (url)
+                            setEditing((previous) =>
+                              previous
+                                ? {
+                                    ...previous,
+                                    data: {
+                                      ...previous.data,
+                                      [field.key]: url,
+                                    },
+                                  }
+                                : previous,
+                            );
+                        });
                     }}
                   />
                 )}
