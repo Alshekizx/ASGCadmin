@@ -109,7 +109,7 @@ export default function ContentFields({
     );
   if (
     typeof value === "string" &&
-    /^(img|.*(?:image|logo|photo|thumbnail|cover).*)$/i.test(fieldKey)
+    /(?:^img$|img$|image|logo|photo|thumbnail|cover)/i.test(fieldKey)
   )
     return (
       <label className="block text-sm">
