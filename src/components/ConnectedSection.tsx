@@ -556,12 +556,12 @@ export default function ConnectedSection({
     let finished = 0;
     let nextIndex = 0;
     const firstSortOrder =
-      Math.max(
-        -1,
+      Math.min(
+        0,
         ...rows
           .filter((row) => row.kind === "photo")
           .map((row) => row.sort_order),
-      ) + 1;
+      ) - validFiles.length;
     const addedRows: ContentRow[] = [];
     const failures: string[] = [];
     const uploadOne = async () => {
