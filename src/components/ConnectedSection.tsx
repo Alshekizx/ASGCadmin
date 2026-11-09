@@ -1,50 +1,47 @@
-import Dashboard from "./Dashboard";
-import type { AdminPage } from "../types/admin";
-import ContentFields from "./ContentFields";
-import ImageUploadField from "./ImageUploadField";
-import Users from "./Users";
-import { useEffect, useState } from "react";
-import { requireSupabase } from "../lib/supabase";
+import Dashboard from "./Dashboard"
+import type { AdminPage } from "../types/admin"
+import ContentFields from "./ContentFields"
+import ImageUploadField from "./ImageUploadField"
+import Users from "./Users"
+import { useEffect, useState } from "react"
+import { requireSupabase } from "../lib/supabase"
 
 interface ContentRow {
-  id: string;
-  kind: string;
-  slug: string;
-  title: string;
-  status: string;
-  data: Record<string, unknown>;
-  sort_order: number;
-  updated_at?: string;
+  id: string
+  kind: string
+  slug: string
+  title: string
+  status: string
+  data: Record<string, unknown>
+  sort_order: number
+  updated_at?: string
 }
 interface Submission {
-  id: string;
-  kind: string;
-  status: string;
-  data: Record<string, string>;
-  created_at: string;
+  id: string
+  kind: string
+  status: string
+  data: Record<string, string>
+  created_at: string
 }
 type Field = {
-  key: string;
-  label: string;
-  type?: "textarea" | "checkbox" | "number" | "image" | "file" | "lines";
-  required?: boolean;
-};
+  key: string
+  label: string
+  type?: "textarea" | "checkbox" | "number" | "image" | "file" | "lines"
+  required?: boolean
+}
 const text = (
   key: string,
   label: string,
   type?: Field["type"],
   required = false,
-): Field => ({ key, label, type, required });
-const common = [text("img", "Image", "image")];
-const definitions: Record<
-  string,
-  {
-    kind: string;
-    label: string;
-    fields: Field[];
-    defaults: Record<string, unknown>;
-  }
-> = {
+): Field => ({ key, label, type, required })
+const common = [text("img", "Image", "image")]
+const definitions: Record<string, {
+  kind: string
+  label: string
+  fields: Field[]
+  defaults: Record<string, unknown>
+}> = {
   events: {
     kind: "event",
     label: "Events",
@@ -262,10 +259,10 @@ const definitions: Record<
     ],
     defaults: { date: "", outlet: "", url: "" },
   },
-};
-const inputClass = "w-full border border-gray-300 rounded-lg p-3 text-sm";
+}
+const inputClass = "w-full border border-gray-300 rounded-lg p-3 text-sm"
 const buttonClass =
-  "rounded-lg bg-[#0d1e35] text-white px-4 py-2 text-sm disabled:opacity-50";
+  "rounded-lg bg-[#0d1e35] text-white px-4 py-2 text-sm disabled:opacity-50"
 const errorMessage = (error: unknown) =>
   typeof error === "object" &&
   error &&
@@ -279,40 +276,44 @@ const errorMessage = (error: unknown) =>
       ? error.message
       : typeof error === "object" && error && "message" in error
         ? String(error.message)
-        : "The request failed. Please try again.";
-const safeLink = (value: string) => /^(https?:\/\/|\/[^/])/.test(value);
+        : "The request failed. Please try again."
+const safeLink = (value: string) => /^(https?:\/\/|\/[^/])/.test(value)
 
 export default function ConnectedSection({
   section,
   onNavigate,
 }: {
-  section: string;
-  onNavigate: (section: AdminPage) => void;
+  section: string
+  onNavigate: (section: AdminPage) => void
 }) {
-  const [mediaKind, setMediaKind] = useState("media");
-  const key = section === "media" ? mediaKind : section.replace(/-editor$/, "");
-  const definition = definitions[key];
-  const [rows, setRows] = useState<ContentRow[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
-  const [editing, setEditing] = useState<ContentRow | null>(null);
-  const [search, setSearch] = useState("");
-  const client = requireSupabase();
+  const [mediaKind, setMediaKind] = useState("media")
+  const key = section === "media" ? mediaKind : section.replace(/-editor$/, "")
+  const definition = definitions[key]
+  const [rows, setRows] = useState<ContentRow[]>([])
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState("")
+  const [editing, setEditing] = useState<ContentRow | null>(null)
+  const [search, setSearch] = useState("")
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(
+    new Set(),
+  )
+  const client = requireSupabase()
 
   useEffect(() => {
-    let active = true;
-    let revision = 0;
-    setEditing(null);
-    setLoading(true);
-    setError("");
-    setNotice("");
-    setSearch("");
+    let active = true
+    let revision = 0
+    setEditing(null)
+    setSelectedPhotoIds(new Set())
+    setLoading(true)
+    setError("")
+    setNotice("")
+    setSearch("")
     const refresh = async () => {
-      const current = ++revision;
+      const current = ++revision
       const [content, incoming] = await Promise.all([
         client
           .from("asgc_content")
@@ -323,120 +324,207 @@ export default function ConnectedSection({
           .from("asgc_submissions")
           .select("*")
           .order("created_at", { ascending: false }),
-      ]);
-      if (!active || current !== revision) return;
+      ])
+      if (!active || current !== revision) return
       if (content.error || incoming.error)
-        setError(errorMessage(content.error || incoming.error));
+        setError(errorMessage(content.error || incoming.error))
       else {
-        setRows(content.data ?? []);
-        setSubmissions(incoming.data ?? []);
-        setError("");
+        setRows(content.data ?? [])
+        setSubmissions(incoming.data ?? [])
+        setError("")
       }
-      setLoading(false);
-    };
-    void refresh();
+      setLoading(false)
+    }
+    void refresh()
     const channel = client
       .channel(`admin-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "asgc_content" },
         () => {
-          void refresh();
+          void refresh()
         },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "asgc_submissions" },
         () => {
-          void refresh();
+          void refresh()
         },
-      );
+      )
     void client.auth
       .getSession()
       .then(async ({ data }) => {
-        if (!active || !data.session) return;
-        await client.realtime.setAuth(data.session.access_token);
-        if (active) channel.subscribe();
+        if (!active || !data.session) return
+        await client.realtime.setAuth(data.session.access_token)
+        if (active) channel.subscribe()
       })
       .catch(() => {
         // Periodic refresh continues if the realtime connection is unavailable.
-      });
+      })
     const focus = () => {
-      void refresh();
-    };
-    window.addEventListener("focus", focus);
-    const poll = window.setInterval(focus, 15000);
+      void refresh()
+    }
+    window.addEventListener("focus", focus)
+    const poll = window.setInterval(focus, 15000)
     return () => {
-      active = false;
-      clearInterval(poll);
-      window.removeEventListener("focus", focus);
-      void client.removeChannel(channel);
-    };
-  }, [client, key]);
+      active = false
+      clearInterval(poll)
+      window.removeEventListener("focus", focus)
+      void client.removeChannel(channel)
+    }
+  }, [client, key])
 
   const mutate = async (
     operation: () => PromiseLike<{ error: unknown }>,
     done: () => void,
   ) => {
-    if (busy) return;
-    setBusy(true);
-    setError("");
-    setNotice("");
+    if (busy) return
+    setBusy(true)
+    setError("")
+    setNotice("")
     try {
-      const { error } = await operation();
-      if (error) throw error;
-      done();
-      setNotice("Changes saved.");
+      const { error } = await operation()
+      if (error) throw error
+      done()
+      setNotice("Changes saved.")
     } catch (error) {
-      setError(errorMessage(error));
+      setError(errorMessage(error))
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
   const remove = (table: string, id: string) => {
-    if (!window.confirm("Delete this item permanently?")) return;
+    if (!window.confirm("Delete this item permanently?")) return
     void mutate(
       () => client.from(table).delete().eq("id", id).select("id").single(),
       () => {
         if (table === "asgc_content")
-          setRows((previous) => previous.filter((row) => row.id !== id));
+          setRows((previous) => previous.filter((row) => row.id !== id))
         else
-          setSubmissions((previous) => previous.filter((row) => row.id !== id));
+          setSubmissions((previous) => previous.filter((row) => row.id !== id))
       },
-    );
-  };
-  const save = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!editing || !definition) return;
-    const data = { ...editing.data };
-    if (definition.kind === "event") {
-      const capacity = Number(data.capacity || 0);
-      if (!Number.isSafeInteger(capacity) || capacity < 0) {
-        setError("Capacity must be a whole number of zero or more.");
-        return;
+    )
+  }
+  const deletePhotos = async (photosToDelete?: ContentRow[]) => {
+    if (busy) return
+    const selectedPhotos = rows.filter(
+      (row) =>
+        row.kind === "photo" &&
+        (photosToDelete
+          ? photosToDelete.some((selected) => selected.id === row.id)
+          : selectedPhotoIds.has(row.id)),
+    )
+    if (!selectedPhotos.length) return
+    if (
+      !window.confirm(
+        `Permanently delete ${selectedPhotos.length} photo${
+          selectedPhotos.length === 1 ? "" : "s"
+        }? This cannot be undone.`,
+      )
+    )
+      return
+
+    setBusy(true)
+    setError("")
+    setNotice("")
+    try {
+      const { error: deleteError } = await client
+        .from("asgc_content")
+        .delete()
+        .in(
+          "id",
+          selectedPhotos.map((row) => row.id),
+        )
+      if (deleteError) throw deleteError
+
+      setRows((previous) =>
+        previous.filter(
+          (row) => !selectedPhotos.some((selected) => selected.id === row.id),
+        ),
+      )
+      setSelectedPhotoIds((previous) => {
+        const next = new Set(previous)
+        for (const row of selectedPhotos) next.delete(row.id)
+        return next
+      })
+
+      const marker = "__asgc_photo_path__"
+      const publicUrl = new URL(
+        client.storage.from("asgc-assets").getPublicUrl(marker).data.publicUrl,
+      )
+      const markerIndex = publicUrl.pathname.lastIndexOf(marker)
+      const storagePrefix = publicUrl.pathname.slice(0, markerIndex)
+      const storagePaths = selectedPhotos.flatMap((row) => {
+        const imageUrl = row.data.img
+        if (typeof imageUrl !== "string") return []
+        try {
+          const parsedUrl = new URL(imageUrl)
+          if (
+            markerIndex < 0 ||
+            parsedUrl.origin !== publicUrl.origin ||
+            !parsedUrl.pathname.startsWith(storagePrefix)
+          )
+            return []
+          const path = decodeURIComponent(
+            parsedUrl.pathname.slice(storagePrefix.length),
+          )
+          return path ? [path] : []
+        } catch {
+          return []
+        }
+      })
+
+      if (storagePaths.length) {
+        const { error: storageError } = await client.storage
+          .from("asgc-assets")
+          .remove([...new Set(storagePaths)])
+        if (storageError) {
+          setError(
+            `Deleted ${selectedPhotos.length} gallery photo(s), but their stored image files could not all be removed: ${errorMessage(storageError)}`,
+          )
+          return
+        }
       }
-      data.capacity = capacity;
+
+      setNotice(`Deleted ${selectedPhotos.length} photo(s) from the gallery.`)
+    } catch (deleteError) {
+      setError(errorMessage(deleteError))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const save = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!editing || !definition) return
+    const data = { ...editing.data }
+    if (definition.kind === "event") {
+      const capacity = Number(data.capacity || 0)
+      if (!Number.isSafeInteger(capacity) || capacity < 0) {
+        setError("Capacity must be a whole number of zero or more.")
+        return
+      }
+      data.capacity = capacity
     }
     if (
       definition.kind === "photo" &&
       editing.status === "published" &&
       !String(data.img ?? "").trim()
     ) {
-      setError("Upload a photo before publishing.");
-      return;
+      setError("Upload a photo before publishing.")
+      return
     }
     if (
       definition.kind === "settings" &&
       data.adminUrl &&
       !/^https:\/\//.test(String(data.adminUrl))
     ) {
-      setError("Use an https:// address for the administrator website.");
-      return;
+      setError("Use an https:// address for the administrator website.")
+      return
     }
 
     if (definition.kind === "news") {
-      const sections: { id: string; heading: string; paragraphs: string[] }[] =
-        [];
+      const sections: { id: string heading: string paragraphs: string[] }[] = []
       for (const line of String(data.body ?? "")
         .split(/\n+/)
         .filter(Boolean)) {
@@ -445,22 +533,22 @@ export default function ConnectedSection({
             id: `section-${sections.length + 1}`,
             heading: line.slice(2),
             paragraphs: [],
-          });
+          })
         else {
           if (!sections.length)
-            sections.push({ id: "section-1", heading: "", paragraphs: [] });
-          sections[sections.length - 1].paragraphs.push(line);
+            sections.push({ id: "section-1", heading: "", paragraphs: [] })
+          sections[sections.length - 1].paragraphs.push(line)
         }
       }
-      data.sections = sections;
+      data.sections = sections
       data.readingMinutes = Math.max(
         1,
         Math.ceil(String(data.body ?? "").split(/\s+/).length / 200),
-      );
+      )
     }
-    if (definition.kind === "photo") data.caption = editing.title;
+    if (definition.kind === "photo") data.caption = editing.title
     if (["leadership", "partner"].includes(definition.kind))
-      data.name = editing.title;
+      data.name = editing.title
     for (const field of definition.fields)
       if (
         [
@@ -482,8 +570,8 @@ export default function ConnectedSection({
       ) {
         setError(
           "Image, file and website links must start with https://, http:// or /.",
-        );
-        return;
+        )
+        return
       }
     const row = {
       ...editing,
@@ -492,7 +580,7 @@ export default function ConnectedSection({
         ? { status: "published", slug: "global" }
         : {}),
       updated_at: new Date().toISOString(),
-    };
+    }
     void mutate(
       () =>
         client
@@ -504,99 +592,99 @@ export default function ConnectedSection({
         setRows((previous) => [
           row,
           ...previous.filter((item) => item.id !== row.id),
-        ]);
-        setEditing(null);
+        ])
+        setEditing(null)
       },
-    );
-  };
+    )
+  }
   const upload = async (
     file: File,
     type: "image" | "file" = "image",
   ): Promise<string | null> => {
-    if (busy) return null;
+    if (busy) return null
     const supportedTypes =
       type === "image"
         ? ["image/jpeg", "image/png", "image/webp"]
-        : ["application/pdf"];
+        : ["application/pdf"]
     if (!supportedTypes.includes(file.type)) {
       setError(
         type === "image"
           ? "Choose a JPEG, PNG or WebP image."
           : "Choose a PDF file.",
-      );
-      return null;
+      )
+      return null
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Please choose a file smaller than 10 MB.");
-      return null;
+      setError("Please choose a file smaller than 10 MB.")
+      return null
     }
-    setBusy(true);
-    setError("");
+    setBusy(true)
+    setError("")
     try {
-      const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+      const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`
       const { error } = await client.storage
         .from("asgc-assets")
-        .upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data } = client.storage.from("asgc-assets").getPublicUrl(path);
-      return data.publicUrl;
+        .upload(path, file, { upsert: false })
+      if (error) throw error
+      const { data } = client.storage.from("asgc-assets").getPublicUrl(path)
+      return data.publicUrl
     } catch (error) {
-      setError(errorMessage(error));
-      return null;
+      setError(errorMessage(error))
+      return null
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
   const uploadPhotos = async (fileList: FileList | null) => {
-    const selected = Array.from(fileList ?? []);
-    if (!selected.length || busy) return;
+    const selected = Array.from(fileList ?? [])
+    if (!selected.length || busy) return
 
     const validFiles = selected.filter(
       (file) =>
         ["image/jpeg", "image/png", "image/webp"].includes(file.type) &&
         file.size <= 10 * 1024 * 1024,
-    );
-    const skippedCount = selected.length - validFiles.length;
+    )
+    const skippedCount = selected.length - validFiles.length
     if (!validFiles.length) {
-      setError("Choose JPEG, PNG or WebP images under 10 MB each.");
-      return;
+      setError("Choose JPEG, PNG or WebP images under 10 MB each.")
+      return
     }
 
-    setBusy(true);
-    setError("");
-    setNotice("");
-    setUploadProgress(`Uploading 0 of ${validFiles.length} photos…`);
-    let finished = 0;
-    let nextIndex = 0;
+    setBusy(true)
+    setError("")
+    setNotice("")
+    setUploadProgress(`Uploading 0 of ${validFiles.length} photos…`)
+    let finished = 0
+    let nextIndex = 0
     const firstSortOrder =
       Math.min(
         0,
         ...rows
           .filter((row) => row.kind === "photo")
           .map((row) => row.sort_order),
-      ) - validFiles.length;
-    const addedRows: ContentRow[] = [];
-    const failures: string[] = [];
+      ) - validFiles.length
+    const addedRows: ContentRow[] = []
+    const failures: string[] = []
     const uploadOne = async () => {
       while (nextIndex < validFiles.length) {
-        const fileIndex = nextIndex++;
-        const file = validFiles[fileIndex];
-        let storagePath: string | undefined;
+        const fileIndex = nextIndex++
+        const file = validFiles[fileIndex]
+        let storagePath: string | undefined
         try {
-          const id = crypto.randomUUID();
-          storagePath = `${id}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+          const id = crypto.randomUUID()
+          storagePath = `${id}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`
           const { error: uploadError } = await client.storage
             .from("asgc-assets")
-            .upload(storagePath, file, { upsert: false });
-          if (uploadError) throw uploadError;
+            .upload(storagePath, file, { upsert: false })
+          if (uploadError) throw uploadError
 
           const { data } = client.storage
             .from("asgc-assets")
-            .getPublicUrl(storagePath);
+            .getPublicUrl(storagePath)
           const title = file.name
             .replace(/\.[^.]+$/, "")
             .replace(/[_-]+/g, " ")
-            .trim();
+            .trim()
           const row: ContentRow = {
             id,
             kind: "photo",
@@ -610,69 +698,72 @@ export default function ConnectedSection({
             },
             sort_order: firstSortOrder + fileIndex,
             updated_at: new Date().toISOString(),
-          };
+          }
           const { error: insertError } = await client
             .from("asgc_content")
-            .insert(row);
-          if (insertError) throw insertError;
-          addedRows.push(row);
+            .insert(row)
+          if (insertError) throw insertError
+          addedRows.push(row)
         } catch (uploadError) {
           if (storagePath) {
-            await client.storage.from("asgc-assets").remove([storagePath]);
+            await client.storage.from("asgc-assets").remove([storagePath])
           }
-          failures.push(`${file.name}: ${errorMessage(uploadError)}`);
+          failures.push(`${file.name}: ${errorMessage(uploadError)}`)
         } finally {
-          finished++;
-          setUploadProgress(`Uploading ${finished} of ${validFiles.length} photos…`);
+          finished++
+          setUploadProgress(
+            `Uploading ${finished} of ${validFiles.length} photos…`,
+          )
         }
       }
-    };
+    }
 
     try {
       await Promise.all(
-        Array.from(
-          { length: Math.min(4, validFiles.length) },
-          () => uploadOne(),
+        Array.from({ length: Math.min(4, validFiles.length) }, () =>
+          uploadOne(),
         ),
-      );
+      )
       if (addedRows.length) {
-        setRows((previous) => [...addedRows, ...previous]);
-        setNotice(`Added ${addedRows.length} photo(s) to the Media gallery.`);
+        setRows((previous) => [...addedRows, ...previous])
+        setNotice(`Added ${addedRows.length} photo(s) to the Media gallery.`)
       }
       if (failures.length || skippedCount) {
-        const details = failures.slice(0, 3).join("; ");
+        const details = failures.slice(0, 3).join("; ")
         setError(
           `${failures.length} upload(s) failed and ${skippedCount} file(s) were skipped.` +
-            (details ? ` ${details}` : " Choose JPEG, PNG or WebP images under 10 MB each."),
-        );
+            (details
+              ? ` ${details}`
+              : " Choose JPEG, PNG or WebP images under 10 MB each."),
+        )
       }
     } finally {
-      setBusy(false);
-      setUploadProgress("");
+      setBusy(false)
+      setUploadProgress("")
     }
-  };
+  }
   const edit = (row: ContentRow) => {
-    const data = { ...definition?.defaults, ...row.data };
+    const data = { ...definition?.defaults, ...row.data }
     if (row.kind === "news" && !data.body)
       data.body = (
-        (data.sections as { heading: string; paragraphs: string[] }[]) || []
+        data.sections as { heading: string paragraphs: string[] }[] || []
       )
         .map((section) =>
           [section.heading ? "# " + section.heading : "", ...section.paragraphs]
             .filter(Boolean)
             .join("\n\n"),
         )
-        .join("\n\n");
-    setEditing({ ...row, data });
-    setError("");
-    setNotice("");
-  };
+        .join("\n\n")
+    setEditing({ ...row, data })
+    setError("")
+    setNotice("")
+  }
   const incomingKind =
     section === "newsletter"
       ? "newsletter"
       : ["registrations", "event-registrations"].includes(section)
         ? "registration"
-        : null;
+        : null
   const incomingRows = submissions
     .map((row) =>
       row.kind === "registration"
@@ -694,7 +785,20 @@ export default function ConnectedSection({
     )
     .filter((row) =>
       JSON.stringify(row.data).toLowerCase().includes(search.toLowerCase()),
-    );
+    )
+  const visiblePhotos = rows.filter(
+    (row) =>
+      row.kind === "photo" &&
+      `${row.title} ${String(row.data.caption ?? "")} ${String(row.data.album ?? "")}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  )
+  const allVisiblePhotosSelected =
+    visiblePhotos.length > 0 &&
+    visiblePhotos.every((photo) => selectedPhotoIds.has(photo.id))
+  const selectedPhotoCount = rows.filter(
+    (row) => row.kind === "photo" && selectedPhotoIds.has(row.id),
+  ).length
 
   return (
     <section className="p-6 max-w-7xl mx-auto">
@@ -791,7 +895,7 @@ export default function ConnectedSection({
                           ...previous,
                           data: {
                             ...previous.data,
-                            ...(value as Record<string, unknown>),
+                            ...value as Record<string, unknown>,
                           },
                         }
                       : previous,
@@ -855,9 +959,7 @@ export default function ConnectedSection({
                     required={field.required}
                     value={
                       field.type === "lines"
-                        ? ((editing.data[field.key] as string[]) || []).join(
-                            "\n",
-                          )
+                        ? (editing.data[field.key] as string[] || []).join("\n")
                         : String(editing.data[field.key] ?? "")
                     }
                     onChange={(event) =>
@@ -905,7 +1007,7 @@ export default function ConnectedSection({
                     accept="application/pdf"
                     className="mt-2 block text-sm"
                     onChange={(event) => {
-                      const file = event.target.files?.[0];
+                      const file = event.target.files?.[0]
                       if (file)
                         void upload(file, "file").then((url) => {
                           if (url)
@@ -919,8 +1021,8 @@ export default function ConnectedSection({
                                     },
                                   }
                                 : previous,
-                            );
-                        });
+                            )
+                        })
                     }}
                   />
                 )}
@@ -987,30 +1089,30 @@ export default function ConnectedSection({
                       disabled={busy}
                       className="sr-only"
                       onChange={(event) => {
-                        void uploadPhotos(event.target.files);
-                        event.currentTarget.value = "";
+                        void uploadPhotos(event.target.files)
+                        event.currentTarget.value = ""
                       }}
                     />
                   </label>
                 )}
                 {(definition.kind !== "settings" ||
                   !rows.some((row) => row.kind === "settings")) && (
-                <button
-                  className={buttonClass}
-                  onClick={() =>
-                    edit({
-                      id: crypto.randomUUID(),
-                      kind: definition.kind,
-                      slug: definition.kind === "settings" ? "global" : "",
-                      title: "",
-                      status: "draft",
-                      data: { ...definition.defaults },
-                      sort_order: 0,
-                    })
-                  }
-                >
-                  Add New
-                </button>
+                  <button
+                    className={buttonClass}
+                    onClick={() =>
+                      edit({
+                        id: crypto.randomUUID(),
+                        kind: definition.kind,
+                        slug: definition.kind === "settings" ? "global" : "",
+                        title: "",
+                        status: "draft",
+                        data: { ...definition.defaults },
+                        sort_order: 0,
+                      })
+                    }
+                  >
+                    Add New
+                  </button>
                 )}
               </div>
             </div>
@@ -1026,51 +1128,164 @@ export default function ConnectedSection({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-            <div className="space-y-3">
-              {rows
-                .filter(
-                  (row) =>
-                    row.kind === definition.kind &&
-                    row.title.toLowerCase().includes(search.toLowerCase()),
-                )
-                .map((row) => (
-                  <div
-                    key={row.id}
-                    className="bg-white rounded-xl border p-4 flex flex-wrap items-center justify-between gap-3"
+            {definition.kind === "photo" ? (
+              <>
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm"
+                    disabled={busy || visiblePhotos.length === 0}
+                    onClick={() =>
+                      setSelectedPhotoIds((previous) => {
+                        const next = new Set(previous)
+                        for (const photo of visiblePhotos) {
+                          if (allVisiblePhotosSelected) next.delete(photo.id)
+                          else next.add(photo.id)
+                        }
+                        return next
+                      })
+                    }
                   >
-                    <div>
-                      <p className="font-semibold">{row.title}</p>
-                      <p className="text-xs text-gray-500">
-                        {row.status}
-                        {row.data.test_data ? " · Test data" : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        disabled={busy}
-                        onClick={() => edit(row)}
-                        className={buttonClass}
+                    {allVisiblePhotosSelected
+                      ? "Deselect visible"
+                      : "Select all visible"}
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {selectedPhotoCount} selected
+                  </span>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-50"
+                    disabled={busy || selectedPhotoCount === 0}
+                    onClick={() => void deletePhotos()}
+                  >
+                    {busy
+                      ? "Deleting…"
+                      : `Delete selected (${selectedPhotoCount})`}
+                  </button>
+                </div>
+                {visiblePhotos.length ? (
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    {visiblePhotos.map((row) => (
+                      <article
+                        key={row.id}
+                        className={`overflow-hidden rounded-xl border bg-white ${
+                          selectedPhotoIds.has(row.id)
+                            ? "border-[#c9a84c] ring-2 ring-[#c9a84c]"
+                            : "border-gray-200"
+                        }`}
                       >
-                        Edit
-                      </button>
-                      {definition.kind !== "settings" && (
+                        <label className="relative block aspect-square cursor-pointer bg-gray-100">
+                          <img
+                            src={String(row.data.img ?? "")}
+                            alt={row.title || "Gallery photo"}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${row.title || "gallery photo"}`}
+                            checked={selectedPhotoIds.has(row.id)}
+                            disabled={busy}
+                            className="absolute left-3 top-3 h-5 w-5 accent-[#0d1e35]"
+                            onChange={(event) =>
+                              setSelectedPhotoIds((previous) => {
+                                const next = new Set(previous)
+                                if (event.target.checked) next.add(row.id)
+                                else next.delete(row.id)
+                                return next
+                              })
+                            }
+                          />
+                        </label>
+                        <div className="space-y-3 p-3">
+                          <div>
+                            <p className="line-clamp-2 font-semibold">
+                              {row.title || "Untitled photo"}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {String(row.data.album || "No album")} ·{" "}
+                              {row.status}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => edit(row)}
+                              className={`${buttonClass} flex-1`}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              className="rounded-lg px-3 py-2 text-sm text-red-700"
+                              onClick={() => void deletePhotos([row])}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-6 text-gray-500">
+                    {rows.some((row) => row.kind === "photo")
+                      ? "No photos match your search."
+                      : "No photos yet. Upload your first gallery image."}
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3">
+                {rows
+                  .filter(
+                    (row) =>
+                      row.kind === definition.kind &&
+                      row.title.toLowerCase().includes(search.toLowerCase()),
+                  )
+                  .map((row) => (
+                    <div
+                      key={row.id}
+                      className="bg-white rounded-xl border p-4 flex flex-wrap items-center justify-between gap-3"
+                    >
+                      <div>
+                        <p className="font-semibold">{row.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {row.status}
+                          {row.data.test_data ? " · Test data" : ""}
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
                         <button
                           disabled={busy}
-                          className="text-sm text-red-700"
-                          onClick={() => remove("asgc_content", row.id)}
+                          onClick={() => edit(row)}
+                          className={buttonClass}
                         >
-                          Delete
+                          Edit
                         </button>
-                      )}
+                        {definition.kind !== "settings" && (
+                          <button
+                            disabled={busy}
+                            className="text-sm text-red-700"
+                            onClick={() => remove("asgc_content", row.id)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-            </div>
-            {!rows.some((row) => row.kind === definition.kind) && (
-              <p className="text-gray-500 mt-6">
-                No content yet. Add your first item.
-              </p>
+                  ))}
+              </div>
             )}
+            {definition.kind !== "photo" &&
+              !rows.some((row) => row.kind === definition.kind) && (
+                <p className="text-gray-500 mt-6">
+                  No content yet. Add your first item.
+                </p>
+              )}
           </>
         )
       ) : (
@@ -1138,7 +1353,7 @@ export default function ConnectedSection({
                     disabled={busy}
                     value={row.status}
                     onChange={(event) => {
-                      const status = event.target.value;
+                      const status = event.target.value
                       void mutate(
                         () =>
                           client
@@ -1153,7 +1368,7 @@ export default function ConnectedSection({
                               item.id === row.id ? { ...item, status } : item,
                             ),
                           ),
-                      );
+                      )
                     }}
                   >
                     {(row.kind === "newsletter"
@@ -1179,5 +1394,5 @@ export default function ConnectedSection({
         </>
       )}
     </section>
-  );
+  )
 }
