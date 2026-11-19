@@ -23,6 +23,13 @@ interface Submission {
   data: Record<string, string>
   created_at: string
 }
+interface CaptionEdit {
+  id: string
+  title: string
+  img: string
+  album: string
+  caption: string
+}
 type Field = {
   key: string
   label: string
@@ -301,6 +308,7 @@ export default function ConnectedSection({
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(
     new Set(),
   )
+  const [captionEdits, setCaptionEdits] = useState<CaptionEdit[] | null>(null)
   const client = requireSupabase()
 
   useEffect(() => {
@@ -308,6 +316,7 @@ export default function ConnectedSection({
     let revision = 0
     setEditing(null)
     setSelectedPhotoIds(new Set())
+    setCaptionEdits(null)
     setLoading(true)
     setError("")
     setNotice("")
@@ -490,6 +499,87 @@ export default function ConnectedSection({
       setNotice(`Deleted ${selectedPhotos.length} photo(s) from the gallery.`)
     } catch (deleteError) {
       setError(errorMessage(deleteError))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const beginCaptionEdit = () => {
+    const selectedPhotos = rows.filter(
+      (row) => row.kind === "photo" && selectedPhotoIds.has(row.id),
+    )
+    setCaptionEdits(
+      selectedPhotos.map((row) => ({
+        id: row.id,
+        title: row.title,
+        img: String(row.data.img ?? ""),
+        album: String(row.data.album ?? "No album"),
+        caption: String(row.data.caption ?? row.title),
+      })),
+    )
+    setError("")
+    setNotice("")
+  }
+  const saveCaptions = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!captionEdits?.length || busy) return
+
+    setBusy(true)
+    setError("")
+    setNotice("")
+    const saved: ContentRow[] = []
+    const failed: string[] = []
+    try {
+      for (let index = 0; index < captionEdits.length; index++) {
+        const edit = captionEdits[index]
+        const current = rows.find((row) => row.id === edit.id)
+        if (!current) {
+          failed.push(`Photo ${index + 1}: no longer available`)
+          continue
+        }
+        try {
+          const updatedRow: ContentRow = {
+            ...current,
+            title: edit.caption,
+            data: { ...current.data, caption: edit.caption },
+            updated_at: new Date().toISOString(),
+          }
+          const { error } = await client
+            .from("asgc_content")
+            .update({
+              title: updatedRow.title,
+              data: updatedRow.data,
+              updated_at: updatedRow.updated_at,
+            })
+            .eq("id", updatedRow.id)
+            .select("id")
+            .single()
+          if (error) failed.push(`Photo ${index + 1}: ${errorMessage(error)}`)
+          else saved.push(updatedRow)
+        } catch (error) {
+          failed.push(`Photo ${index + 1}: ${errorMessage(error)}`)
+        }
+      }
+
+      if (saved.length) {
+        const savedIds = new Set(saved.map((row) => row.id))
+        setRows((previous) =>
+          previous.map(
+            (row) => saved.find((savedRow) => savedRow.id === row.id) ?? row,
+          ),
+        )
+        setCaptionEdits(
+          (previous) =>
+            previous?.filter((edit) => !savedIds.has(edit.id)) ?? null,
+        )
+      }
+      if (failed.length) {
+        setError(
+          `Saved ${saved.length} of ${captionEdits.length} captions. ${failed.join("; ")}`,
+        )
+      } else {
+        setCaptionEdits(null)
+        setNotice(`Saved captions for ${saved.length} photos.`)
+      }
     } finally {
       setBusy(false)
     }
@@ -1155,6 +1245,14 @@ export default function ConnectedSection({
                   </span>
                   <button
                     type="button"
+                    className="rounded-lg border border-[#0d1e35] bg-white px-4 py-2 text-sm text-[#0d1e35] disabled:opacity-50"
+                    disabled={busy || selectedPhotoCount === 0}
+                    onClick={beginCaptionEdit}
+                  >
+                    Edit captions ({selectedPhotoCount})
+                  </button>
+                  <button
+                    type="button"
                     className="rounded-lg bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-50"
                     disabled={busy || selectedPhotoCount === 0}
                     onClick={() => void deletePhotos()}
@@ -1164,6 +1262,86 @@ export default function ConnectedSection({
                       : `Delete selected (${selectedPhotoCount})`}
                   </button>
                 </div>
+                {captionEdits && (
+                  <form
+                    onSubmit={saveCaptions}
+                    className="mb-6 rounded-xl border border-gray-200 bg-white p-4 sm:p-6"
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-lg font-semibold">
+                          Edit selected captions
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          Each number identifies its photo in the selected list.
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className={buttonClass}
+                          disabled={busy || captionEdits.length === 0}
+                        >
+                          {busy ? "Saving…" : "Save captions"}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg px-4 py-2 text-sm"
+                          disabled={busy}
+                          onClick={() => setCaptionEdits(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                    <div className="max-h-[32rem] space-y-3 overflow-y-auto">
+                      {captionEdits.map((photo, index) => (
+                        <div
+                          key={photo.id}
+                          className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-center"
+                        >
+                          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+                            <img
+                              src={photo.img}
+                              alt={`Photo ${index + 1}: ${photo.title || "Untitled photo"}`}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                            <span className="absolute left-1 top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#0d1e35] px-1 text-xs font-bold text-white">
+                              {index + 1}
+                            </span>
+                          </div>
+                          <label className="block flex-1 text-sm">
+                            <span className="mb-1 block text-gray-600">
+                              Photo {index + 1} · {photo.album}
+                            </span>
+                            <textarea
+                              aria-label={`Caption for photo ${index + 1}`}
+                              className={inputClass}
+                              rows={2}
+                              required
+                              value={photo.caption}
+                              disabled={busy}
+                              onChange={(event) =>
+                                setCaptionEdits(
+                                  (previous) =>
+                                    previous?.map((edit) =>
+                                      edit.id === photo.id
+                                        ? {
+                                            ...edit,
+                                            caption: event.target.value,
+                                          }
+                                        : edit,
+                                    ) ?? null,
+                                )
+                              }
+                            />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </form>
+                )}
                 {visiblePhotos.length ? (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {visiblePhotos.map((row) => (
